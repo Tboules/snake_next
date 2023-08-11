@@ -11,13 +11,16 @@ interface ISnakeState {
   canvasCtx: CanvasRenderingContext2D | null;
   playing: boolean;
   snake: ISnake[];
+  intervalId?: number;
 }
 
 interface ISnakeFunctions {
   initializeBoard: (ctx: CanvasRenderingContext2D | null) => void;
+  clearBoard: () => void;
   startGame: () => void;
   manageSnakeMovement: (e: KeyboardEvent) => void;
   drawSnake: () => void;
+  stopGame: () => void;
 }
 
 const CANVAS_HEIGHT = 1000;
@@ -40,17 +43,39 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
       canvasCtx: ctx,
     }),
 
+  clearBoard: () => {
+    const ctx = get().canvasCtx;
+    if (!ctx) return;
+
+    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  },
+
   startGame: () => {
     get().drawSnake();
 
-    return set({ playing: true });
+    let intervalId = window.setInterval(function () {
+      console.log(new Date().toLocaleTimeString());
+    }, 1000);
+
+    return set({ playing: true, intervalId });
+  },
+
+  stopGame: () => {
+    if (get().intervalId != null) {
+      clearInterval(get().intervalId);
+    }
+
+    get().clearBoard();
+
+    return set({ playing: false });
   },
 
   drawSnake: () => {
     const ctx = get().canvasCtx;
     if (!ctx) return;
 
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    get().clearBoard();
+
     ctx.fillStyle = "green";
 
     get().snake.forEach((s) => {
@@ -63,7 +88,7 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
     let snakeCopy = [...get().snake];
     if (!ctx || !get().playing) return;
 
-    ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    get().clearBoard();
 
     if (e.key == "a" || e.key == "ArrowLeft") {
       console.log("left");
