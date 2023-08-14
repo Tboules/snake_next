@@ -12,13 +12,15 @@ interface ISnakeState {
   playing: boolean;
   snake: ISnake[];
   intervalId?: number;
+  direction: IDirection;
 }
 
 interface ISnakeFunctions {
   initializeBoard: (ctx: CanvasRenderingContext2D | null) => void;
   clearBoard: () => void;
   startGame: () => void;
-  manageSnakeMovement: (e: KeyboardEvent) => void;
+  changeSnakeDirection: (e: KeyboardEvent) => void;
+  moveSnake: () => void;
   drawSnake: () => void;
   stopGame: () => void;
 }
@@ -28,8 +30,7 @@ const CANVAS_WIDTH = 1000;
 const SNAKE_INTERVAL = 20;
 const SNAKE_BLOCK_SIZE = 19;
 
-const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
-  canvasCtx: null,
+const initialState: Omit<ISnakeState, "canvasCtx"> = {
   playing: false,
   snake: [
     { x: 10, y: 10 },
@@ -37,6 +38,12 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
     { x: 10, y: 50 },
     { x: 10, y: 70 },
   ],
+  direction: "right",
+};
+
+const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
+  canvasCtx: null,
+  ...initialState,
 
   initializeBoard: (ctx) =>
     set({
@@ -51,10 +58,11 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
   },
 
   startGame: () => {
+    console.log("startng");
     get().drawSnake();
 
     let intervalId = window.setInterval(function () {
-      console.log(new Date().toLocaleTimeString());
+      get().moveSnake();
     }, 1000);
 
     return set({ playing: true, intervalId });
@@ -67,7 +75,34 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
 
     get().clearBoard();
 
-    return set({ playing: false });
+    return set({ ...initialState });
+  },
+  moveSnake: () => {
+    const snakeCopy = [...get().snake];
+    const snakeHead = snakeCopy[0];
+    const dir = get().direction;
+
+    snakeCopy.pop();
+
+    switch (dir) {
+      case "down":
+        snakeCopy.unshift({ ...snakeHead, y: snakeHead.y + SNAKE_INTERVAL });
+        break;
+      case "up":
+        snakeCopy.unshift({ ...snakeHead, y: snakeHead.y - SNAKE_INTERVAL });
+        break;
+      case "left":
+        snakeCopy.unshift({ ...snakeHead, x: snakeHead.x - SNAKE_INTERVAL });
+        break;
+      case "right":
+        snakeCopy.unshift({ ...snakeHead, x: snakeHead.x + SNAKE_INTERVAL });
+        break;
+      default:
+        break;
+    }
+
+    set({ snake: snakeCopy });
+    get().drawSnake();
   },
 
   drawSnake: () => {
@@ -83,31 +118,35 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
     });
   },
 
-  manageSnakeMovement: (e) => {
+  changeSnakeDirection: (e) => {
     const ctx = get().canvasCtx;
-    let snakeCopy = [...get().snake];
-    if (!ctx || !get().playing) return;
+    console.log("change direction");
 
-    get().clearBoard();
+    if (!ctx || !get().playing) return;
+    let dir: IDirection = get().direction;
 
     if (e.key == "a" || e.key == "ArrowLeft") {
-      console.log("left");
+      if (dir == "right") return;
+
+      set({ direction: "left" });
     }
     if (e.key == "d" || e.key == "ArrowRight") {
-      const newHead = { x: snakeCopy[0].x + SNAKE_INTERVAL, y: snakeCopy[0].y };
+      if (dir == "left") return;
 
-      snakeCopy.unshift(newHead);
-      snakeCopy.pop();
+      set({ direction: "right" });
     }
     if (e.key == "w" || e.key == "ArrowUp") {
-      console.log("up");
+      if (dir == "down") return;
+
+      set({ direction: "up" });
     }
     if (e.key == "s" || e.key == "ArrowDown") {
-      console.log("down");
+      if (dir == "up") return;
+
+      set({ direction: "down" });
     }
 
-    set({ snake: snakeCopy });
-    get().drawSnake();
+    console.log(get().direction);
   },
 }));
 

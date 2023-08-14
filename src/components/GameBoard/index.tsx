@@ -5,7 +5,7 @@ import React, { useEffect, useRef } from "react";
 
 const GameBoard = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { initializeBoard, manageSnakeMovement } = useSnakeStore();
+  const { initializeBoard, changeSnakeDirection } = useSnakeStore();
 
   useEffect(() => {
     if (canvasRef.current) {
@@ -14,12 +14,12 @@ const GameBoard = () => {
   }, [initializeBoard]);
 
   useEffect(() => {
-    window.addEventListener("keydown", manageSnakeMovement);
+    window.addEventListener("keydown", changeSnakeDirection);
 
     return () => {
-      window.removeEventListener("keydown", manageSnakeMovement);
+      window.removeEventListener("keydown", changeSnakeDirection);
     };
-  }, [manageSnakeMovement]);
+  }, [changeSnakeDirection]);
 
   return (
     <div className="p-4">
