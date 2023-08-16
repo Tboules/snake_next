@@ -13,6 +13,7 @@ interface ISnakeState {
   snake: ISnake[];
   intervalId?: number;
   direction: IDirection;
+  changedDirDuringInterval: boolean;
 }
 
 interface ISnakeFunctions {
@@ -45,6 +46,7 @@ const initialState: Omit<ISnakeState, "canvasCtx"> = {
     { x: 0, y: 160 },
   ],
   direction: "right",
+  changedDirDuringInterval: false,
 };
 
 const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
@@ -68,7 +70,8 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
 
     let intervalId = window.setInterval(function () {
       get().moveSnake();
-    }, 1000);
+      set({ changedDirDuringInterval: false });
+    }, 400);
 
     return set({ playing: true, intervalId });
   },
@@ -158,28 +161,32 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
   changeSnakeDirection: (e) => {
     const ctx = get().canvasCtx;
 
-    if (!ctx || !get().playing) return;
+    if (!ctx || !get().playing || get().changedDirDuringInterval) return;
     let dir: IDirection = get().direction;
+
+    function setDirChange(d: IDirection) {
+      set({ direction: d, changedDirDuringInterval: true });
+    }
 
     if (e.key == "a" || e.key == "ArrowLeft") {
       if (dir == "right") return;
 
-      set({ direction: "left" });
+      setDirChange("left");
     }
     if (e.key == "d" || e.key == "ArrowRight") {
       if (dir == "left") return;
 
-      set({ direction: "right" });
+      setDirChange("right");
     }
     if (e.key == "w" || e.key == "ArrowUp") {
       if (dir == "down") return;
 
-      set({ direction: "up" });
+      setDirChange("up");
     }
     if (e.key == "s" || e.key == "ArrowDown") {
       if (dir == "up") return;
 
-      set({ direction: "down" });
+      setDirChange("down");
     }
   },
 }));
