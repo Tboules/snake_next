@@ -38,6 +38,11 @@ const initialState: Omit<ISnakeState, "canvasCtx"> = {
     { x: 0, y: 20 },
     { x: 0, y: 40 },
     { x: 0, y: 60 },
+    { x: 0, y: 80 },
+    { x: 0, y: 100 },
+    { x: 0, y: 120 },
+    { x: 0, y: 140 },
+    { x: 0, y: 160 },
   ],
   direction: "right",
 };
@@ -59,12 +64,11 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
   },
 
   startGame: () => {
-    console.log("startng");
     get().drawSnake();
 
     let intervalId = window.setInterval(function () {
       get().moveSnake();
-    }, 100);
+    }, 1000);
 
     return set({ playing: true, intervalId });
   },
@@ -108,7 +112,7 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
 
   collisionCheck: () => {
     let collision = false;
-    const snake = get().snake;
+    const snake = [...get().snake];
     const head = snake[0];
 
     const gameOver = () => {
@@ -124,6 +128,13 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
       head.y < 0
     ) {
       gameOver();
+    }
+
+    for (let i = 1; i < snake.length; i++) {
+      const node = snake[i];
+      if (node.x == head.x && node.y == head.y) {
+        gameOver();
+      }
     }
 
     return collision;
