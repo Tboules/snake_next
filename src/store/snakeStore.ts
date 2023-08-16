@@ -11,9 +11,11 @@ interface ISnakeState {
   canvasCtx: CanvasRenderingContext2D | null;
   playing: boolean;
   snake: ISnake[];
+  food: ISnake | null;
   intervalId?: number;
   direction: IDirection;
   changedDirDuringInterval: boolean;
+  score: number;
 }
 
 interface ISnakeFunctions {
@@ -25,6 +27,9 @@ interface ISnakeFunctions {
   drawSnake: () => void;
   stopGame: () => void;
   collisionCheck: () => boolean;
+  generateSnakeFood: () => void;
+  clearSnakeFood: () => void;
+  drawSnakeFood: () => void;
 }
 
 const CANVAS_HEIGHT = 1000;
@@ -47,6 +52,8 @@ const initialState: Omit<ISnakeState, "canvasCtx"> = {
   ],
   direction: "right",
   changedDirDuringInterval: false,
+  food: null,
+  score: 0,
 };
 
 const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
@@ -85,6 +92,7 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
 
     return set({ ...initialState });
   },
+
   moveSnake: () => {
     const snakeCopy = [...get().snake];
     const snakeHead = snakeCopy[0];
@@ -187,6 +195,42 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
       if (dir == "up") return;
 
       setDirChange("down");
+    }
+  },
+
+  //food
+  generateSnakeFood: () => {
+    const x =
+      Math.floor((Math.random() * CANVAS_WIDTH) / SNAKE_INTERVAL) *
+      SNAKE_INTERVAL;
+    const y =
+      Math.floor((Math.random() * CANVAS_HEIGHT) / SNAKE_INTERVAL) *
+      SNAKE_INTERVAL;
+
+    get().clearSnakeFood();
+    set({ food: { x, y } });
+    get().drawSnakeFood();
+  },
+
+  clearSnakeFood: () => {
+    const ctx = get().canvasCtx;
+    const lastFood = get().food;
+    if (!ctx) return;
+
+    if (lastFood) {
+      ctx.clearRect(lastFood.x, lastFood.y, SNAKE_BLOCK_SIZE, SNAKE_BLOCK_SIZE);
+    }
+  },
+
+  drawSnakeFood: () => {
+    const ctx = get().canvasCtx;
+    if (!ctx) return;
+    const food = get().food;
+
+    ctx.fillStyle = "red";
+
+    if (food) {
+      ctx.fillRect(food.x, food.y, SNAKE_BLOCK_SIZE, SNAKE_BLOCK_SIZE);
     }
   },
 }));
