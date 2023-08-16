@@ -117,10 +117,12 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
       collision = true;
     };
 
-    if (head.x > CANVAS_WIDTH - SNAKE_INTERVAL || head.x < 0) {
-      gameOver();
-    }
-    if (head.y > CANVAS_HEIGHT - SNAKE_INTERVAL || head.y < 0) {
+    if (
+      head.x > CANVAS_WIDTH - SNAKE_INTERVAL ||
+      head.x < 0 ||
+      head.y > CANVAS_HEIGHT - SNAKE_INTERVAL ||
+      head.y < 0
+    ) {
       gameOver();
     }
 
