@@ -23,6 +23,7 @@ interface ISnakeFunctions {
   moveSnake: () => void;
   drawSnake: () => void;
   stopGame: () => void;
+  collisionCheck: () => boolean;
 }
 
 const CANVAS_HEIGHT = 1000;
@@ -33,10 +34,10 @@ const SNAKE_BLOCK_SIZE = 19;
 const initialState: Omit<ISnakeState, "canvasCtx"> = {
   playing: false,
   snake: [
-    { x: 10, y: 10 },
-    { x: 10, y: 30 },
-    { x: 10, y: 50 },
-    { x: 10, y: 70 },
+    { x: 0, y: 0 },
+    { x: 0, y: 20 },
+    { x: 0, y: 40 },
+    { x: 0, y: 60 },
   ],
   direction: "right",
 };
@@ -63,7 +64,7 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
 
     let intervalId = window.setInterval(function () {
       get().moveSnake();
-    }, 1000);
+    }, 100);
 
     return set({ playing: true, intervalId });
   },
@@ -105,9 +106,32 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
     get().drawSnake();
   },
 
+  collisionCheck: () => {
+    let collision = false;
+    const snake = get().snake;
+    const head = snake[0];
+
+    const gameOver = () => {
+      alert("game over");
+      get().stopGame();
+      collision = true;
+    };
+
+    if (head.x > CANVAS_WIDTH - SNAKE_INTERVAL || head.x < 0) {
+      gameOver();
+    }
+    if (head.y > CANVAS_HEIGHT - SNAKE_INTERVAL || head.y < 0) {
+      gameOver();
+    }
+
+    return collision;
+  },
+
   drawSnake: () => {
     const ctx = get().canvasCtx;
     if (!ctx) return;
+
+    if (get().collisionCheck()) return;
 
     get().clearBoard();
 
@@ -120,7 +144,6 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
 
   changeSnakeDirection: (e) => {
     const ctx = get().canvasCtx;
-    console.log("change direction");
 
     if (!ctx || !get().playing) return;
     let dir: IDirection = get().direction;
@@ -145,8 +168,6 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
 
       set({ direction: "down" });
     }
-
-    console.log(get().direction);
   },
 }));
 
