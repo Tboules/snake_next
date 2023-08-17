@@ -25,6 +25,7 @@ interface ISnakeFunctions {
   clearBoard: () => void;
   startGame: () => void;
   changeSnakeDirection: (e: KeyboardEvent) => void;
+  setMovementInterval: () => void;
   moveSnake: () => void;
   addTail: () => void;
   drawSnake: () => void;
@@ -45,14 +46,14 @@ const initialState: Omit<ISnakeState, "canvasCtx"> = {
   playing: false,
   snake: [
     { x: 0, y: 0 },
-    { x: 0, y: 40 },
+    { x: 0, y: SNAKE_INTERVAL },
   ],
   direction: "right",
   changedDirDuringInterval: false,
 
   food: null,
   score: 0,
-  speed: 500,
+  speed: 400,
 };
 
 const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
@@ -71,16 +72,26 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
     ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
   },
 
-  startGame: () => {
-    get().drawSnake();
-    get().generateSnakeFood();
+  setMovementInterval: () => {
+    if (get().intervalId != null) {
+      clearInterval(get().intervalId);
+    }
 
     let intervalId = window.setInterval(function () {
       get().moveSnake();
       set({ changedDirDuringInterval: false });
     }, get().speed);
 
-    return set({ playing: true, intervalId });
+    set({ intervalId });
+  },
+
+  startGame: () => {
+    get().drawSnake();
+    get().generateSnakeFood();
+
+    get().setMovementInterval();
+
+    return set({ playing: true });
   },
 
   stopGame: () => {
@@ -262,8 +273,10 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
     set((state) => ({
       removeTail: false,
       score: state.score + 1,
-      speed: state.speed * 0.9,
+      speed: state.speed * 0.95,
     }));
+
+    get().setMovementInterval();
   },
 }));
 
