@@ -273,7 +273,7 @@ const useSnakeStore = create<ISnakeState & ISnakeFunctions>((set, get) => ({
     set((state) => ({
       removeTail: false,
       score: state.score + 1,
-      speed: state.speed * 0.95,
+      speed: state.speed * 0.98,
     }));
 
     get().setMovementInterval();
